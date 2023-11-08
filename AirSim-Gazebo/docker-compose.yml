@@ -1,0 +1,165 @@
+version: "3"
+services:
+  airsim:
+    privileged: true
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      # -----------DEFAULT VALUE DO NOT MODIFY-----------
+      DISPLAY:                    ${DISPLAY}
+      WAYLAND_DISPLAY:            ${WAYLAND_DISPLAY}
+      QT_NO_MITSHM:               ${QT_NO_MITSHM}
+      XDG_RUNTIME_DIR:            ${XDG_RUNTIME_DIR}
+      NVIDIA_DISABLE_REQUIRE:     ${NVIDIA_DISABLE_REQUIRE}
+      ROS_DOMAIN_ID:              ${ROS_DOMAIN_ID}
+      NVIDIA_DRIVER_CAPABILITIES: ${NVIDIA_DRIVER_CAPABILITIES}
+      # --------SET FOR DEVELOPMENT OR DEBUGGING---------
+      # ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ 
+      # REBUILD: true
+      # DEBUG_ENTRYPOINT: ${DEBUG_ENTRYPOINT}
+      # REBUILD_RPKG: 1
+      # ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ G
+    volumes:
+      # -----------DEFAULT VALUE DO NOT MODIFY-----------
+      - ${XDG_RUNTIME_DIR}:${XDG_RUNTIME_DIR}
+      - ${X11_SOCKET_DIR}:${X11_SOCKET_DIR}
+      - ${VULKAN_NVIDIA_ICD_DIR}:/etc/vulkan/icd.d/nvidia_icd.json
+      - ${VULKAN_NVIDIA_LAYER_DIR}:/etc/vulkan/implicit_layer.d/nvidia_layers.json
+      - ${VULKAN_NVIDIA_EGL_DIR}:/usr/share/glvnd/egl_vendor.d/10_nvidia.json
+      - shared-image:/root/shared
+      # --------SET FOR DEVELOPMENT OR DEBUGGING---------
+      # ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ 
+      # - ./models/AirSim/typhoon_h480/TyphoonH480.json:/home/user/Documents/AirSim/settings.json
+      # - ./AirSim/models/typhoon_h480/TyphoonH480.json:/home/user/Documents/AirSim/settings.json
+      # - ./entrypoint-sim.sh:/usr/local/bin/entrypoint.sh
+      # - ./LinuxNoEditor_temp:/home/user/ForestDeploy
+      # ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ 
+    devices:
+      # -----COMMENT OUT IF YOU EXPERIENCE OCI ERROR-----
+      - /dev/dri/card0
+      - /dev/dri/renderD128
+    # ipc: ${IPC_MODE}
+    # network_mode: host
+    networks:
+      px4-sitl-as-gz:
+        ipv4_address: ${CONTAINER_AIRSIM_ADDR}
+    container_name:   ${CONTAINER_AIRSIM_NAME}
+    hostname:         ${CONTAINER_AIRSIM_HOSTNAME}
+    image:            ${CONTAINER_AIRSIM_IMAGE}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  px4:
+    privileged: true
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      # -----------DEFAULT VALUE DO NOT MODIFY-----------
+      DISPLAY:            ${DISPLAY}
+      WAYLAND_DISPLAY:    ${WAYLAND_DISPLAY}
+      QT_NO_MITSHM:       ${QT_NO_MITSHM}
+      XDG_RUNTIME_DIR:    ${XDG_RUNTIME_DIR}
+      ROS_DOMAIN_ID:              ${ROS_DOMAIN_ID}
+      # ----------SET ITE SIMULTAION PARAMETERS----------
+      #  ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ 
+      AIRSIM_HOST:        ${CONTAINER_AIRSIM_ADDR}
+      PX4_SIM_HOST_ADDR:  ${CONTAINER_PX4_ADDR}
+      PX4_SIM_MODEL:      ${PX4_SIM_MODEL}
+      PX4_SIM_WORLD:      ${PX4_SIM_WORLD}
+      NO_PXH:             ${NO_PXH}
+      # PX4_HOME_LAT:       ${PX4_HOME_LAT}
+      # PX4_HOME_LON:       ${PX4_HOME_LON}
+      # PX4_HOME_ALT:       ${PX4_HOME_ALT}
+      # --------SET FOR DEVELOPMENT OR DEBUGGING---------
+      # ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ 
+      HEADLESS:           ${HEADLESS}
+      # DEBUG_ENTRYPOINT:   ${DEBUG_ENTRYPOINT}
+      # PX4_SITL_DEBUGGER:  ide
+      # REBUILD_RPKG:       1
+      # ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ 
+    volumes:
+      # -----------DEFAULT VALUE DO NOT MODIFY-----------
+      - ${XDG_RUNTIME_DIR}:${XDG_RUNTIME_DIR}
+      - ${X11_SOCKET_DIR}:${X11_SOCKET_DIR}
+      - shared-image:/root/shared
+      # --------SET FOR DEVELOPMENT OR DEBUGGING---------
+      # ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ 
+      - ./entrypoint-px4.sh:/usr/local/bin/entrypoint.sh
+      # - ./ros_ws:/root/ros_ws/src
+      # - ${HOME}/Pictures/MCResult:/root/MCResult
+      # - ./python/spawnObject.py:/root/AirSim/python/spawnObject.py
+      # - ./Gazebo/models:/root/PX4-Autopilot/Tools/sitl_gazebo/models
+      # - ./Gazebo/worlds:/root/PX4-Autopilot/Tools/sitl_gazebo/worlds
+      # - ./GazeboDrone:/root/AirSim/GazeboDrone/build/GazeboDrone
+      # - ./worlds:/root/PX4-Autopilot/Tools/sitl_gazebo/worlds
+      # ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ 
+    devices:
+      # -----COMMENT OUT IF YOU EXPERIENCE OCI ERROR-----
+      - /dev/dri/card0
+      - /dev/dri/renderD128
+    # ipc: ${IPC_MODE}
+    # network_mode: host
+    networks:
+      px4-sitl-as-gz:
+        ipv4_address: ${CONTAINER_PX4_ADDR}
+    container_name:   ${CONTAINER_PX4_NAME}
+    hostname:         ${CONTAINER_PX4_HOSTNAME}
+    image:            ${CONTAINER_PX4_IMAGE}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  qgc:
+    privileged: true
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      # -----------DEFAULT VALUE DO NOT MODIFY-----------
+      DISPLAY:                    ${DISPLAY}
+      WAYLAND_DISPLAY:            ${WAYLAND_DISPLAY}
+      QT_NO_MITSHM:               ${QT_NO_MITSHM}
+      XDG_RUNTIME_DIR:            ${XDG_RUNTIME_DIR}
+      ROS_DOMAIN_ID:              ${ROS_DOMAIN_ID}
+      NVIDIA_DRIVER_CAPABILITIES: ${NVIDIA_DRIVER_CAPABILITIES}
+    volumes:
+      # -----------DEFAULT VALUE DO NOT MODIFY-----------
+      - ${XDG_RUNTIME_DIR}:${XDG_RUNTIME_DIR}
+      - ${X11_SOCKET_DIR}:${X11_SOCKET_DIR}
+    devices:
+      # -----COMMENT OUT IF YOU EXPERIENCE OCI ERROR-----
+      - /dev/dri/card0
+      - /dev/dri/renderD128
+    # ipc: ${IPC_MODE}
+    # network_mode: host
+    networks:
+      px4-sitl-as-gz:
+        ipv4_address: ${CONTAINER_QGC_ADDR}
+    container_name:   ${CONTAINER_QGC_NAME}
+    hostname:         ${CONTAINER_QGC_HOSTNAME}
+    image:            ${CONTAINER_QGC_IMAGE}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+networks:
+  px4-sitl-as-gz:
+    name: ${CONTAINER_NET_NAME}
+    driver: bridge
+    ipam:
+      driver: default
+      config: 
+        - subnet:   ${CONTAINER_NET_SUBNET}
+          gateway:  ${CONTAINER_NET_GATEWAY}
+
+volumes:
+     shared-image:
